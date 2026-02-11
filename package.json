@@ -1,0 +1,22 @@
+{
+  "name": "brajdarpan-guruvani-client-manager",
+  "version": "1.0.0",
+  "description": "Brajdarpan Guruvani Kendra - Client Record Management System",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check-icons": "node scripts/download-icons-helper.js"
+  },
+  "keywords": ["pwa", "client-manager", "brajdarpan"],
+  "author": "Ritik Goyal",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ejs": "^3.1.9",
+    "express-session": "^1.17.3",
+    "uuid": "^9.0.1"
+  }
+}
+
