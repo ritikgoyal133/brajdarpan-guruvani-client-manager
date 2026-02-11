@@ -96,11 +96,12 @@
                             });
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('Login error:', status, error, xhr.responseText);
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'An error occurred. Please try again.',
+                            text: xhr.responseJSON?.message || 'An error occurred. Please try again.',
                             confirmButtonColor: '#FF6B35'
                         });
                     }
