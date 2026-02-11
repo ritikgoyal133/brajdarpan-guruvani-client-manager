@@ -675,11 +675,60 @@ textarea.form-control {
   color: var(--text-color);
 }
 
+/* Mobile Card View */
+.client-card-mobile {
+  border-left: 4px solid var(--primary-color);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.client-card-mobile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2) !important;
+}
+
+.client-card-mobile .card-body {
+  padding: 15px;
+}
+
+.client-card-mobile .card-title {
+  color: var(--primary-color);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.client-card-mobile hr {
+  margin: 10px 0;
+  opacity: 0.2;
+}
+
+.client-card-mobile small {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.client-card-mobile strong {
+  font-size: 14px;
+  display: block;
+  margin-top: 2px;
+  word-break: break-word;
+}
+
 /* Responsive table improvements */
 @media (max-width: 768px) {
   .dataTables_wrapper .dataTables_length,
   .dataTables_wrapper .dataTables_filter {
     margin-bottom: 1rem;
+  }
+  
+  /* Hide desktop table on mobile */
+  .d-none.d-md-block {
+    display: none !important;
+  }
+  
+  /* Show mobile list on mobile */
+  .d-block.d-md-none {
+    display: block !important;
   }
 }
 

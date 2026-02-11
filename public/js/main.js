@@ -33,27 +33,29 @@ $(document).ready(function() {
   let editingClientId = null;
   let dataTable = null;
 
-  // Initialize DataTable
-  dataTable = $('#clientsTable').DataTable({
-    responsive: true,
-    pageLength: 10,
-    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-    order: [[0, 'asc']],
-    language: {
-      search: "Search:",
-      lengthMenu: "Show _MENU_ entries",
-      info: "Showing _START_ to _END_ of _TOTAL_ clients",
-      infoEmpty: "No clients found",
-      infoFiltered: "(filtered from _MAX_ total clients)",
-      zeroRecords: "No matching clients found",
-      loadingRecords: "Loading clients..."
-    },
-    columnDefs: [
-      { orderable: false, targets: 6 } // Actions column not sortable
-    ],
-    processing: true,
-    serverSide: false
-  });
+  // Initialize DataTable (only for desktop)
+  if ($(window).width() >= 768) {
+    dataTable = $('#clientsTable').DataTable({
+      responsive: true,
+      pageLength: 10,
+      lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+      order: [[0, 'asc']],
+      language: {
+        search: "Search:",
+        lengthMenu: "Show _MENU_ entries",
+        info: "Showing _START_ to _END_ of _TOTAL_ clients",
+        infoEmpty: "No clients found",
+        infoFiltered: "(filtered from _MAX_ total clients)",
+        zeroRecords: "No matching clients found",
+        loadingRecords: "Loading clients..."
+      },
+      columnDefs: [
+        { orderable: false, targets: 9 } // Actions column not sortable
+      ],
+      processing: true,
+      serverSide: false
+    });
+  }
 
   // Load clients on page load
   loadClients();
@@ -147,19 +149,30 @@ $(document).ready(function() {
    * Render clients table with DataTables
    */
   function renderClients(clientsToRender) {
-    // Clear existing data
-    dataTable.clear();
+    // Clear existing data (desktop table)
+    if (dataTable) {
+      dataTable.clear();
+    }
 
     if (clientsToRender.length === 0) {
-      dataTable.draw();
+      if (dataTable) {
+        dataTable.draw();
+      }
+      renderMobileList([]);
       return;
     }
 
-    // Add rows to DataTable
-    clientsToRender.forEach(function(client) {
+    // Add rows to DataTable (Desktop only)
+    if (dataTable) {
+      clientsToRender.forEach(function(client) {
       const dobDisplay = formatDate(client.dob);
       const birthTimeDisplay = client.birthTime || '';
       const dobWithTime = birthTimeDisplay ? `${dobDisplay} ${birthTimeDisplay}` : dobDisplay;
+      
+      // Calculate remaining amount
+      const chargeAmount = parseFloat(client.chargeableAmount || 0);
+      const paidAmount = parseFloat(client.paidAmount || 0);
+      const remainingAmount = chargeAmount - paidAmount;
       
       dataTable.row.add([
         escapeHtml(client.name || ''),
@@ -168,15 +181,22 @@ $(document).ready(function() {
         dobWithTime,
         formatDate(client.dot),
         escapeHtml(client.gender || ''),
+        formatCurrency(chargeAmount),
+        formatCurrency(paidAmount),
+        `<span class="${remainingAmount > 0 ? 'text-danger fw-bold' : 'text-success'}">${formatCurrency(remainingAmount)}</span>`,
         `<div class="btn-group" role="group">
           <button class="btn btn-sm btn-primary" onclick="editClient('${client.id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteClient('${client.id}')">Delete</button>
         </div>`
       ]);
-    });
-
-    // Draw the table
-    dataTable.draw();
+      });
+      
+      // Draw the table
+      dataTable.draw();
+    }
+    
+    // Render mobile list view
+    renderMobileList(clientsToRender);
   }
 
   /**
@@ -207,6 +227,8 @@ $(document).ready(function() {
         $('#dot').val(client.dot || '');
         $('#gender').val(client.gender || '');
         $('#problemStatement').val(client.problemStatement || '');
+        $('#chargeableAmount').val(client.chargeableAmount || '');
+        $('#paidAmount').val(client.paidAmount || '');
         editingClientId = clientId;
       }
     }
@@ -237,7 +259,9 @@ $(document).ready(function() {
       birthTime: $('#birthTime').val(),
       dot: $('#dot').val(),
       gender: $('#gender').val(),
-      problemStatement: $('#problemStatement').val().trim()
+      problemStatement: $('#problemStatement').val().trim(),
+      chargeableAmount: $('#chargeableAmount').val() || '0',
+      paidAmount: $('#paidAmount').val() || '0'
     };
 
     // Validation - Required fields: name, gender, mobile, dob, birthTime, dot
@@ -414,6 +438,97 @@ $(document).ready(function() {
     } catch {
       return dateString;
     }
+  }
+
+  /**
+   * Format currency for display
+   */
+  function formatCurrency(amount) {
+    const num = parseFloat(amount) || 0;
+    return '₹' + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  /**
+   * Render mobile list view
+   */
+  function renderMobileList(clientsToRender) {
+    const mobileList = $('#mobileClientList');
+    mobileList.empty();
+
+    if (clientsToRender.length === 0) {
+      mobileList.html('<div class="text-center py-4"><p class="text-muted">No clients found</p></div>');
+      return;
+    }
+
+    clientsToRender.forEach(function(client) {
+      const chargeAmount = parseFloat(client.chargeableAmount || 0);
+      const paidAmount = parseFloat(client.paidAmount || 0);
+      const remainingAmount = chargeAmount - paidAmount;
+      const dobDisplay = formatDate(client.dob);
+      const birthTimeDisplay = client.birthTime || '';
+      const dobWithTime = birthTimeDisplay ? `${dobDisplay} ${birthTimeDisplay}` : dobDisplay;
+      
+      const card = `
+        <div class="card mb-3 shadow-sm client-card-mobile">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h5 class="card-title mb-1">${escapeHtml(client.name || '')}</h5>
+                <p class="text-muted small mb-0">${escapeHtml(client.gender || '')}</p>
+              </div>
+              <div class="btn-group" role="group">
+                <button class="btn btn-sm btn-primary" onclick="editClient('${client.id}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteClient('${client.id}')">Delete</button>
+              </div>
+            </div>
+            <hr class="my-2">
+            <div class="row g-2">
+              <div class="col-6">
+                <small class="text-muted d-block">Mobile</small>
+                <strong>${escapeHtml(client.mobile || '')}</strong>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">Email</small>
+                <strong class="text-break">${escapeHtml(client.email || '-')}</strong>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">DOB & Time</small>
+                <strong>${dobWithTime}</strong>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">Date of Visit</small>
+                <strong>${formatDate(client.dot)}</strong>
+              </div>
+              <div class="col-4">
+                <small class="text-muted d-block">Charge Amount</small>
+                <strong class="text-primary">${formatCurrency(chargeAmount)}</strong>
+              </div>
+              <div class="col-4">
+                <small class="text-muted d-block">Paid Amount</small>
+                <strong class="text-success">${formatCurrency(paidAmount)}</strong>
+              </div>
+              <div class="col-4">
+                <small class="text-muted d-block">Remaining</small>
+                <strong class="${remainingAmount > 0 ? 'text-danger' : 'text-success'}">${formatCurrency(remainingAmount)}</strong>
+              </div>
+              ${client.address ? `
+              <div class="col-12">
+                <small class="text-muted d-block">Address</small>
+                <strong>${escapeHtml(client.address)}</strong>
+              </div>
+              ` : ''}
+              ${client.problemStatement ? `
+              <div class="col-12">
+                <small class="text-muted d-block">Problem Statement</small>
+                <strong>${escapeHtml(client.problemStatement)}</strong>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+      mobileList.append(card);
+    });
   }
 
   /**

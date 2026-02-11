@@ -48,7 +48,9 @@ export async function createClient(req, res) {
       birthTime,
       dot,
       problemStatement,
-      gender
+      gender,
+      chargeableAmount,
+      paidAmount
     } = req.body;
     
     // Validation - Required: name, gender, mobile, dob, birthTime, dot
@@ -77,7 +79,9 @@ export async function createClient(req, res) {
       birthTime: birthTime,
       dot: dot,
       problemStatement: problemStatement ? problemStatement.trim() : '',
-      gender: gender
+      gender: gender,
+      chargeableAmount: chargeableAmount ? parseFloat(chargeableAmount) : 0,
+      paidAmount: paidAmount ? parseFloat(paidAmount) : 0
     };
     
     const newClient = await addClient(clientData);
@@ -101,7 +105,9 @@ export async function updateClientController(req, res) {
       birthTime,
       dot,
       problemStatement,
-      gender
+      gender,
+      chargeableAmount,
+      paidAmount
     } = req.body;
     
     // Validation - Required: name, gender, mobile, dob, birthTime, dot
@@ -129,7 +135,9 @@ export async function updateClientController(req, res) {
       birthTime: birthTime,
       dot: dot,
       problemStatement: problemStatement ? problemStatement.trim() : '',
-      gender: gender
+      gender: gender,
+      chargeableAmount: chargeableAmount ? parseFloat(chargeableAmount) : 0,
+      paidAmount: paidAmount ? parseFloat(paidAmount) : 0
     };
     
     const updatedClient = await updateClient(id, clientData);
@@ -140,8 +148,18 @@ export async function updateClientController(req, res) {
     
     res.json({ success: true, data: updatedClient, message: 'Client updated successfully' });
   } catch (error) {
-    console.error('Error updating client:', error);
-    res.status(500).json({ success: false, message: 'Failed to update client' });
+    console.error('[UPDATE_CLIENT] Error updating client:', error);
+    console.error('[UPDATE_CLIENT] Error details:', {
+      message: error.message,
+      stack: error.stack,
+      id: req.params.id,
+      body: req.body
+    });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to update client',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }
 
