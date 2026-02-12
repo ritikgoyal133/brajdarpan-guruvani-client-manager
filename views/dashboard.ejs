@@ -111,7 +111,18 @@
                     </div>
                     <div class="mb-3">
                         <label for="mobile" class="form-label">Mobile <span class="text-danger">*</span></label>
-                        <input type="tel" id="mobile" name="mobile" maxlength="10" minlength="10" required class="form-control">
+                        <input 
+                            type="tel" 
+                            id="mobile" 
+                            name="mobile" 
+                            maxlength="10" 
+                            minlength="10" 
+                            pattern="[6789][0-9]{9}" 
+                            placeholder="Enter 10-digit mobile (starts with 6,7,8,9)" 
+                            required 
+                            class="form-control"
+                        >
+                        <small class="form-text text-muted">Must be 10 digits starting with 6, 7, 8, or 9</small>
                     </div>
                     <div class="mb-3">
                         <label for="address" class="form-label">Address</label>

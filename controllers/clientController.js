@@ -69,12 +69,22 @@ export async function createClient(req, res) {
       });
     }
     
+    // Validate mobile number: 10 digits, starting with 6, 7, 8, or 9
+    const mobileStr = mobile.toString().trim();
+    const mobileRegex = /^[6789]\d{9}$/;
+    if (!mobileRegex.test(mobileStr)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mobile number must be exactly 10 digits and must start with 6, 7, 8, or 9'
+      });
+    }
+    
     const clientData = {
       id: uuidv4(),
       name: name.trim(),
       email: email ? email.trim() : '',
       address: address ? address.trim() : '',
-      mobile: mobile.toString().trim(),
+      mobile: mobileStr,
       dob: dob,
       birthTime: birthTime,
       dot: dot,
@@ -88,6 +98,15 @@ export async function createClient(req, res) {
     res.status(201).json({ success: true, data: newClient, message: 'Client added successfully' });
   } catch (error) {
     console.error('Error creating client:', error);
+    
+    // Handle duplicate client error
+    if (error.message === 'DUPLICATE_CLIENT' || error.message.includes('already exists')) {
+      return res.status(409).json({
+        success: false,
+        message: 'A client with the same name and mobile number already exists'
+      });
+    }
+    
     res.status(500).json({ success: false, message: 'Failed to create client' });
   }
 }
@@ -126,11 +145,21 @@ export async function updateClientController(req, res) {
       });
     }
     
+    // Validate mobile number: 10 digits, starting with 6, 7, 8, or 9
+    const mobileStr = mobile.toString().trim();
+    const mobileRegex = /^[6789]\d{9}$/;
+    if (!mobileRegex.test(mobileStr)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mobile number must be exactly 10 digits and must start with 6, 7, 8, or 9'
+      });
+    }
+    
     const clientData = {
       name: name.trim(),
       email: email ? email.trim() : '',
       address: address ? address.trim() : '',
-      mobile: mobile.toString().trim(),
+      mobile: mobileStr,
       dob: dob,
       birthTime: birthTime,
       dot: dot,
@@ -155,6 +184,15 @@ export async function updateClientController(req, res) {
       id: req.params.id,
       body: req.body
     });
+    
+    // Handle duplicate client error
+    if (error.message === 'DUPLICATE_CLIENT' || error.message.includes('already exists')) {
+      return res.status(409).json({
+        success: false,
+        message: 'A client with the same name and mobile number already exists'
+      });
+    }
+    
     res.status(500).json({ 
       success: false, 
       message: 'Failed to update client',

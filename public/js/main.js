@@ -283,6 +283,18 @@ $(document).ready(function() {
       return;
     }
 
+    // Validate mobile number: 10 digits, starting with 6, 7, 8, or 9
+    const mobileRegex = /^[6789]\d{9}$/;
+    if (!mobileRegex.test(formData.mobile)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Mobile Number',
+        html: 'Mobile number must be:<br>• Exactly 10 digits<br>• Must start with 6, 7, 8, or 9',
+        confirmButtonColor: '#FF6B35'
+      });
+      return;
+    }
+
     const url = editingClientId 
       ? `/api/clients/${editingClientId}`
       : '/api/clients';
@@ -312,8 +324,27 @@ $(document).ready(function() {
         if (checkSessionExpired(xhr)) {
           redirectToLogin('Your session has expired. Please login again.');
         } else {
-          const message = xhr.responseJSON?.message || 'Error saving client';
-          showError(message);
+          let errorMessage = xhr.responseJSON?.message || 'Error saving client';
+          
+          // Special handling for duplicate client error
+          if (xhr.status === 409 || errorMessage.includes('already exists')) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Duplicate Client',
+              text: errorMessage,
+              confirmButtonColor: '#FF6B35'
+            });
+          } else if (xhr.status === 400) {
+            // Validation error (mobile number format, etc.)
+            Swal.fire({
+              icon: 'error',
+              title: 'Validation Error',
+              text: errorMessage,
+              confirmButtonColor: '#FF6B35'
+            });
+          } else {
+            showError(errorMessage);
+          }
         }
       }
     });
