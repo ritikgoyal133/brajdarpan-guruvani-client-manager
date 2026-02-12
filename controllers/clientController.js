@@ -6,7 +6,7 @@ import {
   updateClient,
   deleteClient,
   searchClients
-} from '../services/fileService.js';
+} from '../services/clientService.js';
 
 // Get all clients
 export async function getAllClients(req, res) {
