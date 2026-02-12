@@ -49,12 +49,47 @@ export async function getClientById(id) {
 }
 
 /**
+ * Check if client with same name and mobile already exists
+ * @param {string} name - Client name
+ * @param {string} mobile - Client mobile number
+ * @param {string} excludeId - Client ID to exclude from check (for updates)
+ * @returns {Promise<boolean>} True if duplicate exists
+ */
+export async function checkDuplicateClient(name, mobile, excludeId = null) {
+  try {
+    const query = {
+      name: { $regex: new RegExp(`^${name.trim()}$`, 'i') }, // Case-insensitive exact match
+      mobile: mobile.toString().trim()
+    };
+    
+    // Exclude current client when updating
+    if (excludeId) {
+      query.id = { $ne: excludeId };
+    }
+    
+    const existing = await Client.findOne(query);
+    return !!existing;
+  } catch (error) {
+    console.error('[CLIENT_SERVICE] Error checking duplicate:', error);
+    throw error;
+  }
+}
+
+/**
  * Add new client
  * @param {Object} clientData - Client data object
  * @returns {Promise<Object>} Created client object
  */
 export async function addClient(clientData) {
   try {
+    // Check for duplicate (name + mobile combination)
+    const isDuplicate = await checkDuplicateClient(clientData.name, clientData.mobile);
+    if (isDuplicate) {
+      const error = new Error('DUPLICATE_CLIENT');
+      error.message = 'A client with the same name and mobile number already exists';
+      throw error;
+    }
+    
     const newClient = new Client({
       ...clientData,
       createdAt: new Date(),
@@ -83,6 +118,14 @@ export async function addClient(clientData) {
  */
 export async function updateClient(id, clientData) {
   try {
+    // Check for duplicate (name + mobile combination), excluding current client
+    const isDuplicate = await checkDuplicateClient(clientData.name, clientData.mobile, id);
+    if (isDuplicate) {
+      const error = new Error('DUPLICATE_CLIENT');
+      error.message = 'A client with the same name and mobile number already exists';
+      throw error;
+    }
+    
     const updatedClient = await Client.findOneAndUpdate(
       { id },
       {
