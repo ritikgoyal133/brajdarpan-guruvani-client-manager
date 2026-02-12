@@ -1,16 +1,24 @@
-import express from 'express';
+// Load environment variables from .env file
+import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import session from 'express-session';
-import clientRoutes from './routes/clientRoutes.js';
-import { authMiddleware, loginMiddleware } from './middleware/authMiddleware.js';
-import { configSession } from './config/session.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load .env file from project root
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+import express from 'express';
+import session from 'express-session';
+import clientRoutes from './routes/clientRoutes.js';
+import { authMiddleware, loginMiddleware } from './middleware/authMiddleware.js';
+import { configSession } from './config/session.js';
+import { connectDB } from './config/database.js';
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
+const systemPassword = process.env.SYSTEM_PASSWORD;
 
 // Trust proxy (important for production deployments like Render, Heroku)
 if (process.env.NODE_ENV === 'production') {
@@ -59,7 +67,7 @@ app.post('/login', (req, res) => {
     return res.json({ success: false, message: 'Password is required' });
   }
   
-  if (password === 'Ritik') {
+  if (password === systemPassword) {
     console.log('[LOGIN] Password correct, creating session...');
     req.session.isAuthenticated = true;
     
@@ -124,12 +132,25 @@ app.get('/dashboard', authMiddleware, (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log('='.repeat(50));
-  console.log(`[SERVER] Server running on port ${PORT}`);
-  console.log(`[SERVER] Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`[SERVER] Trust proxy: ${process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled'}`);
-  console.log(`[SERVER] Visit http://localhost:${PORT} to access the application`);
-  console.log('='.repeat(50));
-});
+async function startServer() {
+  try {
+    // Connect to MongoDB first
+    await connectDB();
+    
+    // Start Express server
+    app.listen(PORT, () => {
+      console.log('='.repeat(50));
+      console.log(`[SERVER] Server running on port ${PORT}`);
+      console.log(`[SERVER] Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`[SERVER] Trust proxy: ${process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled'}`);
+      console.log(`[SERVER] Visit http://localhost:${PORT} to access the application`);
+      console.log('='.repeat(50));
+    });
+  } catch (error) {
+    console.error('[SERVER] ❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
