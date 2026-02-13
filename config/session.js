@@ -25,11 +25,3 @@ export const configSession = {
   }
 };
 
-// Log session configuration on startup
-if (isProduction) {
-  console.log('[SESSION] Production mode: Secure cookies enabled');
-  console.log('[SESSION] Session secret:', process.env.SESSION_SECRET ? 'Set (custom)' : 'Using default');
-} else {
-  console.log('[SESSION] Development mode: Secure cookies disabled');
-}
-

@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import {
   readClients,
   getClientById,
@@ -14,8 +14,7 @@ export async function getAllClients(req, res) {
     const clients = await readClients();
     res.json({ success: true, data: clients });
   } catch (error) {
-    console.error('Error getting clients:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch clients' });
+    res.status(500).json({ success: false, message: 'Failed to fetch clients', error: error.message });
   }
 }
 
@@ -31,8 +30,7 @@ export async function getClient(req, res) {
     
     res.json({ success: true, data: client });
   } catch (error) {
-    console.error('Error getting client:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch client' });
+    res.status(500).json({ success: false, message: 'Failed to fetch client', error: error.message });
   }
 }
 
@@ -80,7 +78,7 @@ export async function createClient(req, res) {
     }
     
     const clientData = {
-      id: uuidv4(),
+      id: randomUUID(),
       name: name.trim(),
       email: email ? email.trim() : '',
       address: address ? address.trim() : '',
@@ -97,17 +95,22 @@ export async function createClient(req, res) {
     const newClient = await addClient(clientData);
     res.status(201).json({ success: true, data: newClient, message: 'Client added successfully' });
   } catch (error) {
-    console.error('Error creating client:', error);
+    console.error('[CREATE_CLIENT] Error:', error.message);
     
     // Handle duplicate client error
     if (error.message === 'DUPLICATE_CLIENT' || error.message.includes('already exists')) {
       return res.status(409).json({
         success: false,
-        message: 'A client with the same name and mobile number already exists'
+        message: 'A client with the same name and mobile number already exists',
+        error: process.env.NODE_ENV === 'production' ? undefined : error.message
       });
     }
     
-    res.status(500).json({ success: false, message: 'Failed to create client' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to create client',
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message
+    });
   }
 }
 
@@ -177,26 +180,21 @@ export async function updateClientController(req, res) {
     
     res.json({ success: true, data: updatedClient, message: 'Client updated successfully' });
   } catch (error) {
-    console.error('[UPDATE_CLIENT] Error updating client:', error);
-    console.error('[UPDATE_CLIENT] Error details:', {
-      message: error.message,
-      stack: error.stack,
-      id: req.params.id,
-      body: req.body
-    });
+    console.error('[UPDATE_CLIENT] Error:', error.message);
     
     // Handle duplicate client error
     if (error.message === 'DUPLICATE_CLIENT' || error.message.includes('already exists')) {
       return res.status(409).json({
         success: false,
-        message: 'A client with the same name and mobile number already exists'
+        message: 'A client with the same name and mobile number already exists',
+        error: process.env.NODE_ENV === 'production' ? undefined : error.message
       });
     }
     
     res.status(500).json({ 
       success: false, 
       message: 'Failed to update client',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message
     });
   }
 }
@@ -213,27 +211,24 @@ export async function deleteClientController(req, res) {
     
     res.json({ success: true, message: 'Client deleted successfully' });
   } catch (error) {
-    console.error('Error deleting client:', error);
-    res.status(500).json({ success: false, message: 'Failed to delete client' });
+    res.status(500).json({ success: false, message: 'Failed to delete client', error: error.message });
   }
 }
 
 // Search clients
 export async function searchClientsController(req, res) {
   try {
-    const { name, mobile, date, gender } = req.query;
+    const { name, mobile, gender } = req.query;
     const query = {};
     
     if (name) query.name = name;
     if (mobile) query.mobile = mobile;
-    if (date) query.date = date;
     if (gender) query.gender = gender;
     
     const clients = await searchClients(query);
     res.json({ success: true, data: clients });
   } catch (error) {
-    console.error('Error searching clients:', error);
-    res.status(500).json({ success: false, message: 'Failed to search clients' });
+    res.status(500).json({ success: false, message: 'Failed to search clients', error: error.message });
   }
 }
 

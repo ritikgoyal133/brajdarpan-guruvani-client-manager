@@ -5,7 +5,6 @@
  */
 
 import Client from '../models/Client.js';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Read all clients from database
@@ -21,7 +20,6 @@ export async function readClients() {
       updatedAt: client.updatedAt ? new Date(client.updatedAt).toISOString() : new Date().toISOString()
     }));
   } catch (error) {
-    console.error('[CLIENT_SERVICE] Error reading clients:', error);
     throw error;
   }
 }
@@ -43,7 +41,6 @@ export async function getClientById(id) {
       updatedAt: client.updatedAt ? new Date(client.updatedAt).toISOString() : new Date().toISOString()
     };
   } catch (error) {
-    console.error('[CLIENT_SERVICE] Error getting client by ID:', error);
     throw error;
   }
 }
@@ -70,7 +67,6 @@ export async function checkDuplicateClient(name, mobile, excludeId = null) {
     const existing = await Client.findOne(query);
     return !!existing;
   } catch (error) {
-    console.error('[CLIENT_SERVICE] Error checking duplicate:', error);
     throw error;
   }
 }
@@ -105,7 +101,6 @@ export async function addClient(clientData) {
       updatedAt: new Date(clientObj.updatedAt).toISOString()
     };
   } catch (error) {
-    console.error('[CLIENT_SERVICE] Error adding client:', error);
     throw error;
   }
 }
@@ -148,7 +143,6 @@ export async function updateClient(id, clientData) {
       updatedAt: new Date(updatedClient.updatedAt).toISOString()
     };
   } catch (error) {
-    console.error('[CLIENT_SERVICE] Error updating client:', error);
     throw error;
   }
 }
@@ -163,7 +157,6 @@ export async function deleteClient(id) {
     const result = await Client.deleteOne({ id });
     return result.deletedCount > 0;
   } catch (error) {
-    console.error('[CLIENT_SERVICE] Error deleting client:', error);
     throw error;
   }
 }
@@ -202,15 +195,7 @@ export async function searchClients(query) {
       updatedAt: client.updatedAt ? new Date(client.updatedAt).toISOString() : new Date().toISOString()
     }));
   } catch (error) {
-    console.error('[CLIENT_SERVICE] Error searching clients:', error);
     throw error;
   }
-}
-
-// Legacy function names for compatibility (if needed)
-export async function writeClients(clients) {
-  // This function is not needed with MongoDB, but kept for compatibility
-  console.warn('[CLIENT_SERVICE] writeClients called - not needed with MongoDB');
-  return clients;
 }
 
