@@ -200,14 +200,13 @@
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Register Service Worker
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then((reg) => console.log('Service Worker registered'))
-                .catch((err) => console.log('Service Worker registration failed:', err));
-        });
-    }
+                // Register Service Worker
+                if ('serviceWorker' in navigator) {
+                    window.addEventListener('load', () => {
+                        navigator.serviceWorker.register('/service-worker.js')
+                            .catch((err) => console.error('Service Worker registration failed:', err));
+                    });
+                }
 </script>
 <script src="/js/main.js"></script>
 </body>
